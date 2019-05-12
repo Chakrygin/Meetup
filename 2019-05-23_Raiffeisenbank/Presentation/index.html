@@ -1,0 +1,545 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Сбор метрик в приложениях ASP.NET Core с использованием Prometheus и DiagnosticSource</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" />
+
+    <style>
+        .reveal h1,
+        .reveal h2,
+        .reveal h3,
+        .reveal h4,
+        .reveal h5,
+        .reveal h6 {
+            text-transform: none;
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .reveal p,
+        .reveal li {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .reveal h1 {
+            font-size: 0.95em !important;
+        }
+
+        .reveal h2 {
+            font-size: 1.3em !important;
+        }
+
+        .reveal h3,
+        .reveal h4,
+        .reveal h5,
+        .reveal h6 {
+            font-size: 1.0em !important;
+        }
+
+        .reveal .slides>section {
+            text-align: center;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .reveal .slides>section {
+            width: 1000px !important;
+            text-align: left;
+        }
+
+        .reveal .slides>section.img {
+            width: 100% !important;
+            text-align: center;
+        }
+
+        .reveal .slides img {
+            border: none;
+            box-shadow: none;
+        }
+
+        .reveal .slide-number {
+            top: 8px;
+            bottom: unset;
+            font-size: 32px;
+        }
+
+        .reveal pre {
+            width: fit-content;
+            margin: 0px;
+        }
+
+        .reveal pre code {
+            font-family: Consolas, monospace !important;
+            max-height: none;
+            min-width: 800px;
+            padding: 40px;
+        }
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <link rel="stylesheet" href="plugin/highlight/themes/vs2015.css" />
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <section>
+                <h1>Сбор метрик в приложениях ASP.NET Core с<br>
+                    использованием Prometheus и DiagnosticSource</h1>
+                <p>Игорь Чакрыгин | <img src="img/ozon.png" alt="" style="vertical-align: middle" /></p>
+            </section>
+
+
+            <section class="img">
+                <img src="img/dashboard.png" alt="" class="" />
+            </section>
+
+
+            <section>
+                <h2>О чём доклад</h2>
+                <ul>
+                    <li>Prometheus
+                        <!-- <ul>
+                            <li>...</li>
+                        </ul> -->
+                    </li>
+                    <li>DiagnosticSource
+                        <!-- <ul>
+                            <li>...</li>
+                        </ul> -->
+                    </li>
+                </ul>
+            </section>
+
+
+            <section>
+                <h2>Prometheus</h2>
+            </section>
+            <section>
+                <h3>Ключевые особенности</h3>
+                <ul>
+                    <li>Многомерная модель данных, идентифицирующая метрики не столько по названию, но и по набору меток
+                        (пары ключ-значение)</li>
+                    <li>Гибкий язык запросов PromQL</li>
+                    <li>Сбор метрик по HTTP с использованием pull модели
+                        (push модель так же поддерживается)</li>
+                    <li>Различные модели обнаружения сервисов и статическая конфигурация</li>
+                </ul>
+            </section>
+            <section class="img">
+                <img src="img/prometheus.png" alt="" />
+            </section>
+
+            <section>
+                <h3>Библиотеки для .NET</h3>
+                <ul>
+                    <li>prometheus-net<br>
+                        <a href="https://github.com/prometheus-net/prometheus-net">
+                            https://github.com/prometheus-net/prometheus-net</a>
+                    </li>
+                    <li>Prometheus.Client<br>
+                        <a href="https://github.com/PrometheusClientNet/Prometheus.Client">
+                            https://github.com/PrometheusClientNet/Prometheus.Client</a>
+                    </li>
+                </ul>
+            </section>
+            <section>
+                <h3>Подключение в ASP.NET Core</h3>
+                <pre><code data-trim class="hljs cs">
+                    using Prometheus.Client.AspNetCore;
+
+                    public sealed class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddMvc();
+                        }
+
+                        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+                        {
+                            if (env.IsDevelopment())
+                            {
+                                app.UseDeveloperExceptionPage();
+                            }
+
+                            app.UsePrometheusServer(); // Подключаем метрики
+                            app.UseMvc();
+                        }
+                    }
+                </code></pre>
+            </section>
+            <section class="img">
+                <img src="img/metrics.png" alt="" />
+            </section>
+
+
+            <section>
+                <h3>Встроенные метрики</h3>
+                <ul>
+                    <li>Количество сборок мусора</li>
+                    <li>Количество потоков</li>
+                    <li>Количество используемой памяти</li>
+                </ul>
+            </section>
+            <section class="img">
+                <h3>Количество сборок мусора по поколениям</h3>
+                <img src="img/gc_1.png" alt="" />
+                <img src="img/gc_2.png" alt="" />
+            </section>
+            <section class="img">
+                <h3>Количество потоков</h3>
+                <img src="img/threads.png" alt="" />
+            </section>
+
+
+            <section>
+                <h3>Типы метрик</h3>
+                <ul>
+                    <li>Counter (счётчик)</li>
+                    <li>Gauge (датчик)</li>
+                    <li>Histogram (гистограмма)</li>
+                    <li>Summary (сводка)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Counter</h3>
+                <pre><code data-trim class="hljs cs">
+                    using Prometheus.Client;
+
+                    // Объявление:
+                    public static Counter RequestsCount { get; } =
+                        Metrics.CreateCounter(
+                            name: "example_requests_count",
+                            help: "");
+
+                    // Примеры использования:
+                    RequestsCount.Inc(1);
+                    RequestsCount.Reset();
+                </code></pre>
+            </section>
+            <section>
+                <h3>Counter</h3>
+                <pre><code data-trim class="hljs">
+                    # TYPE example_requests_count counter
+                    example_requests_count 473
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Метки</h3>
+                <pre><code data-trim class="hljs cs">
+                        using Prometheus.Client;
+
+                        // Объявление:
+                        public static Counter RequestsCount { get; } =
+                            Metrics.CreateCounter(
+                                name: "example_requests_count",
+                                help: "",
+                                labelNames: new[] {"method", "handler"});
+
+                        // Пример использования:
+                        RequestsCount
+                            .WithLabels("GET", "/hello")
+                            .Inc(1);
+                    </code></pre>
+            </section>
+            <section>
+                <h3>Метки</h3>
+                <pre><code data-trim class="hljs">
+                        # TYPE example_requests_count counter
+                        example_requests_count{method="GET",handler="/hello"} 264
+                    </code></pre>
+            </section>
+
+            <section>
+                <h3>Gauge</h3>
+                <pre><code data-trim class="hljs cs">
+                    using Prometheus.Client;
+
+                    // Объявление:
+                    public static Gauge ConcurrentRequestsCount { get; } =
+                        Metrics.CreateGauge(
+                            name: "example_concurrent_requests_count",
+                            help: "");
+
+                    // Примеры использования:
+                    ConcurrentRequestsCount.Inc(1);
+                    ConcurrentRequestsCount.Dec(1);
+                    ConcurrentRequestsCount.Set(42);
+                </code></pre>
+            </section>
+            <section>
+                <h3>Gauge</h3>
+                <pre><code data-trim class="hljs">
+                    # TYPE example_concurrent_requests_count gauge
+                    example_concurrent_requests_count 42
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Histogram</h3>
+                <pre><code data-trim class="hljs cs">
+                    using Prometheus.Client;
+
+                    // Объявление:
+                    public static Histogram RequestDuration { get; } =
+                        Metrics.CreateHistogram(
+                            name: "example_request_duration",
+                            help: "",
+                            buckets: new[] {0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0});
+
+                    // Пример использования:
+                    RequestDuration.Observe(0.74);
+                </code></pre>
+            </section>
+            <section>
+                <h3>Histogram</h3>
+                <pre><code data-trim class="hljs">
+                    # TYPE example_request_duration histogram
+                    example_request_duration_bucket{le="0.01"} 0
+                    example_request_duration_bucket{le="0.05"} 0
+                    example_request_duration_bucket{le="0.1"} 0
+                    example_request_duration_bucket{le="0.5"} 0
+                    example_request_duration_bucket{le="1"} 2
+                    example_request_duration_bucket{le="5"} 2
+                    example_request_duration_bucket{le="10"} 2
+                    example_request_duration_bucket{le="+Inf"} 2
+                    example_request_duration_sum 1,48
+                    example_request_duration_count 2
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Summary</h3>
+                <pre><code data-trim class="hljs cs">
+                    using Prometheus.Client;
+
+                    // Объявление:
+                    public static Summary RequestDurationSummary { get; } =
+                        Metrics.CreateSummary(
+                            name: "example_request_duration_summary",
+                            help: "");
+
+                    // Пример использования:
+                    RequestDurationSummary.Observe(0.74);
+                </code></pre>
+            </section>
+            <section>
+                <h3>Summary</h3>
+                <pre><code data-trim class="hljs">
+                    # TYPE example_request_duration_summary summary
+                    example_request_duration_summary{quantile="0.5"} 0,74
+                    example_request_duration_summary{quantile="0.9"} 0,74
+                    example_request_duration_summary{quantile="0.99"} 0,74
+                    example_request_duration_summary_sum 1,48
+                    example_request_duration_summary_count 2
+                </code></pre>
+            </section>
+
+
+            <section>
+                <h2>Сбор метрик на практике <br>
+                    <small>(На примере запросов в базу данных)</small></h2>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    public async Task&lt;int&gt; GetAnswer()
+                    {
+                        const string query = "SELECT 42;";
+                        using (var connection = new SqlConnection(ConnectionString))
+                        {
+                            var result = await connection
+                                .QueryFirstOrDefaultAsync&lt;int&gt;(query);
+
+                            return result;
+                        }
+                    }
+                </code></pre>
+            </section>
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    // Количество используемых подключений к SqlServer
+                    public static Gauge ConnectionsCount { get; } =
+                        Metrics.CreateGauge(
+                            name: "sql_connections_count",
+                            help: "",
+                            labelNames: new[] {"data_source", "database"});
+
+                    // Количество запросов в SqlServer
+                    public static Counter CommandsCount { get; } =
+                        Metrics.CreateCounter(
+                            name: "sql_commands_count",
+                            help: "",
+                            labelNames: new[] {"query"});
+
+                    // Распределение времени выполнения запросов в SqlServer
+                    public static Histogram CommandsDurationSeconds { get; } =
+                        Metrics.CreateHistogram(
+                            name: "sql_commands_duration_seconds",
+                            help: "",
+                            labelNames: new[] {"query"});
+                </code></pre>
+            </section>
+            <section>
+                <pre><code data-trim class="hljs cs" style="font-size: 0.9em; line-height: 1.0">
+                    public async Task&lt;int&gt; GetAnswerWithMetrics()
+                    {
+                        const string query = "SELECT 42;";
+                        using (var connection = new SqlConnection(ConnectionString))
+                        {
+                            await connection.OpenAsync();
+
+                            ConnectionsCount
+                                .WithLabels(connection.DataSource, connection.Database)
+                                .Inc();
+
+                            CommandsCount
+                                .WithLabels(query)
+                                .Inc();
+
+                            var stopwatch = Stopwatch.StartNew();
+                            var result = await connection
+                                .QueryFirstOrDefaultAsync&lt;int&gt;(query);
+
+                            CommandsDurationSeconds
+                                .WithLabels(query)
+                                .Observe(stopwatch.Elapsed.TotalSeconds);
+
+                            ConnectionsCount
+                                .WithLabels(connection.DataSource, connection.Database)
+                                .Dec();
+
+                            return result;
+                        }
+                    }
+                </code></pre>
+            </section>
+            <section>
+                <pre><code data-trim class="hljs" style="font-size: 0.9em; line-height: 1.0">
+                    # TYPE sql_connections_count gauge
+                    sql_connections_count{data_source="localhost\\sqlexpress",database="master"} 0
+
+                    # TYPE sql_commands_count counter
+                    sql_commands_count{query="SELECT 42;"} 50
+
+                    # TYPE sql_commands_duration_seconds histogram
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.005"} 49
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.01"} 49
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.025"} 49
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.05"} 49
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.075"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.1"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.25"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.5"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="0.75"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="1"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="2.5"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="5"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="7.5"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="10"} 50
+                    sql_commands_duration_seconds_bucket{query="SELECT 42;",le="+Inf"} 50
+                    sql_commands_duration_seconds_sum{query="SELECT 42;"} 0,1019134
+                    sql_commands_duration_seconds_count{query="SELECT 42;"} 50
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Базовые метрики</h3>
+                <ul>
+                    <li>Входящие HTTP запросы</li>
+                    <li>Исходящие HTTP запросы</li>
+                    <li>Запросы в базы данных</li>
+                </ul>
+            </section>
+
+            <!--
+
+            Платформа
+                Общие nuget пакеты для сбора метрик, трассировок, логов, пробрасывания заголовков и т.п.
+                Общие GitLab Pipelines для сборки nuget пакетов и приложений asp.net core
+                Общие дашборды по всем сервисам
+
+            Prometheus
+                Архитектура
+                .net библиотеки
+                Подключение /metrics
+                структура метрик
+                виды метрик
+                    counter
+                    gauge
+                    histogram
+                    summary
+                ondemand метрики
+                встроенные метрики
+                    gc метрики
+                    память
+                    количество потоков
+
+            Пример со сбором метрик с БД
+
+            DiagnosticSource
+                Архитектура
+                Подписка на события
+                Сбор метрик
+                    запросы к БД
+                    входящие http запросы
+                    исходящие http запросы
+                Другие применения
+                    пробрасывание заголовково
+                    логирование
+
+    -->
+        </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+        // More info about config & dependencies:
+        // - https://github.com/hakimel/reveal.js#configuration
+        // - https://github.com/hakimel/reveal.js#dependencies
+        Reveal.initialize({
+
+            width: "80%",
+            height: "80%",
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            slideNumber: true,
+            hash: true,
+
+            dependencies: [
+                { src: 'plugin/markdown/marked.js' },
+                { src: 'plugin/markdown/markdown.js' },
+                { src: 'plugin/notes/notes.js', async: true },
+                {
+                    src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                        hljs.initHighlightingOnLoad();
+                    }
+                }
+            ]
+        });
+    </script>
+</body>
+
+</html>
