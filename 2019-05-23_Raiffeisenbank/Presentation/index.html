@@ -58,7 +58,9 @@
         }
 
         .reveal .slides>section.img {
-            width: 100% !important;
+            min-width: 1000px !important;
+            width: 90% !important;
+            height: 100% !important;
             text-align: center;
         }
 
@@ -70,7 +72,7 @@
         .reveal .slide-number {
             top: 8px;
             bottom: unset;
-            font-size: 32px;
+            font-size: 42px;
         }
 
         .reveal pre {
@@ -82,7 +84,7 @@
             font-family: Consolas, monospace !important;
             max-height: none;
             min-width: 800px;
-            padding: 40px;
+            padding: 10px;
         }
     </style>
 
@@ -108,57 +110,69 @@
                 <p>Игорь Чакрыгин | <img src="img/ozon.png" alt="" style="vertical-align: middle" /></p>
             </section>
 
+            <section>
+                <h2>Платформа в Ozon</h2>
+                <ul>
+                    <li>Общие NuGet пакеты для сбора метрик, трассировок, логов и т.п.</li>
+                    <li>Общие GitLab Pipelines для сборки приложений ASP.NET Core и NuGet пакетов</li>
+                    <li>Общие дашборды по всем сервисам</li>
+                </ul>
+            </section>
 
             <section class="img">
                 <img src="img/dashboard.png" alt="" class="" />
             </section>
 
-
             <section>
                 <h2>О чём доклад</h2>
                 <ul>
-                    <li>Prometheus
-                        <!-- <ul>
-                            <li>...</li>
-                        </ul> -->
+                    <li><b>Prometheus</b>
+                        <ul>
+                            <li>Что это такое и зачем нужно</li>
+                            <li>Какие бывают типы метрик</li>
+                            <li>Как использовать в .NET приложениях</li>
+                        </ul>
                     </li>
-                    <li>DiagnosticSource
-                        <!-- <ul>
-                            <li>...</li>
-                        </ul> -->
+                    <li><b>DiagnosticSource</b>
+                        <ul>
+                            <li>Почему собирать метрики «в лоб» <br />
+                                не самая хорошая идея</li>
+                            <li>Как работает DiagnosticSource</li>
+                            <li>Небольшое демо</li>
+                        </ul>
                     </li>
                 </ul>
             </section>
-
 
             <section>
                 <h2>Чего не будет в докладе</h2>
                 <ul>
-                    <li>Как установить и настроить Prometheus</li>
-                    <li>Как писать запросы к Prometheus</li>
-                    <li>Как настраивать дашборды в Grafana</li>
+                    <li>Установка и настройка Prometheus</li>
+                    <li>Написание запросов к Prometheus</li>
+                    <li>Настройка дашбордов в Grafana</li>
                 </ul>
             </section>
-
 
             <section>
                 <h2>Prometheus</h2>
             </section>
+
             <section>
                 <h3>Ключевые особенности</h3>
                 <ul>
-                    <li>Многомерная модель данных, идентифицирующая метрики не столько по названию, но и по набору меток
-                        (пары ключ-значение)</li>
-                    <li>Гибкий язык запросов PromQL</li>
-                    <li>Сбор метрик по HTTP с использованием pull модели
-                        (push модель так же поддерживается)</li>
-                    <li>Различные модели обнаружения сервисов и статическая конфигурация</li>
+                    <li>Многомерная модель данных,<br />
+                        метрики идентифицируются по названию <br />
+                        и набору меток (пары ключ-значение)</li>
+                    <li>Язык запросов PromQL</li>
+                    <li>Сбор метрик по HTTP</li>
+                    <li>Различные способы обнаружения сервисов <br />
+                        и статическая конфигурация</li>
                 </ul>
             </section>
+
             <section class="img">
                 <img src="img/prometheus.png" alt="" />
             </section>
-
 
             <section>
                 <h3>Библиотеки для .NET</h3>
@@ -173,6 +187,7 @@
                     </li>
                 </ul>
             </section>
+
             <section>
                 <h3>Подключение в ASP.NET Core</h3>
                 <pre><code data-trim class="hljs cs">
@@ -182,35 +197,36 @@
                     {
                         public void ConfigureServices(IServiceCollection services)
                         {
+                            // ...
+
                             services.AddMvc();
                         }
 
                         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
                         {
-                            if (env.IsDevelopment())
-                            {
-                                app.UseDeveloperExceptionPage();
-                            }
+                            // ...
 
-                            app.UsePrometheusServer(); // Подключаем метрики
+                            app.UsePrometheusServer(); // &lt;= Подключаем метрики
                             app.UseMvc();
                         }
                     }
                 </code></pre>
             </section>
+
             <section class="img">
                 <img src="img/metrics.png" alt="" />
             </section>
 
-
             <section>
                 <h3>Встроенные метрики</h3>
                 <ul>
+                    <li>Использование CPU</li>
+                    <li>Использование памяти</li>
                     <li>Количество сборок мусора</li>
                     <li>Количество потоков</li>
-                    <li>Количество используемой памяти</li>
                 </ul>
             </section>
+
             <section class="img">
                 <h3>Количество сборок мусора по поколениям</h3>
                 <img src="img/gc_1.png" alt="" />
@@ -533,8 +549,8 @@
         // - https://github.com/hakimel/reveal.js#dependencies
         Reveal.initialize({
 
-            width: "80%",
-            height: "80%",
+            width: "100%",
+            height: "100%",
             transition: 'slide', // none/fade/slide/convex/concave/zoom
             slideNumber: true,
             hash: true,
