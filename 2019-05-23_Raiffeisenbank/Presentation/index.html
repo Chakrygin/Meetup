@@ -129,8 +129,8 @@
                     <li><b>Prometheus</b>
                         <ul>
                             <li>Что это такое и зачем нужно</li>
-                            <li>Какие бывают типы метрик</li>
                             <li>Как использовать в .NET приложениях</li>
+                            <li>Какие бывают типы метрик</li>
                         </ul>
                     </li>
                     <li><b>DiagnosticSource</b>
@@ -166,7 +166,7 @@
                         метрики идентифицируются по названию <br />
                         и набору меток (пары ключ-значение)</li>
                     <li>Язык запросов PromQL</li>
-                    <li>Сбор метрик по HTTP</li>
+                    <li>Сбор метрик по HTTP (pull модель)</li>
                     <li>Различные способы обнаружения сервисов <br />
                         и статическая конфигурация</li>
                 </ul>
@@ -255,15 +255,15 @@
             <section>
                 <h3>Типы метрик в Prometheus</h3>
                 <ul>
-                    <li>Счётчик (Counter)</li>
-                    <li>Датчик (Gauge)</li>
-                    <li>Гистограмма (Histogram)</li>
-                    <li>Сводка (Summary)</li>
+                    <li>Counter (Счётчик)</li>
+                    <li>Gauge (Датчик)</li>
+                    <li>Histogram (Гистограмма)</li>
+                    <li>Summary (Сводка)</li>
                 </ul>
             </section>
 
             <section>
-                <h3>Счётчик (Counter)</h3>
+                <h3>Counter</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -276,15 +276,6 @@
                     // Примеры использования:
                     RequestsCount.Inc(1);
                     RequestsCount.Reset();
-                </code></pre>
-            </section>
-            <section>
-                <h3>Счётчик (Counter)</h3>
-                <pre><code data-trim class="hljs">
-                    # /metrics
-
-                    # TYPE example_requests_count counter
-                    example_requests_count 473
                 </code></pre>
             </section>
 
@@ -306,18 +297,9 @@
                         .Inc(1);
                 </code></pre>
             </section>
-            <section>
-                <h3>Метки</h3>
-                <pre><code data-trim class="hljs">
-                    # /metrics
-
-                    # TYPE example_requests_count counter
-                    example_requests_count{method="GET",handler="/hello"} 264
-                </code></pre>
-            </section>
 
             <section>
-                <h3>Датчик (Gauge)</h3>
+                <h3>Gauge</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -333,18 +315,9 @@
                     ConcurrentRequestsCount.Set(42);
                 </code></pre>
             </section>
-            <section>
-                <h3>Датчик (Gauge)</h3>
-                <pre><code data-trim class="hljs">
-                    # /metrics
-
-                    # TYPE example_concurrent_requests_count gauge
-                    example_concurrent_requests_count 42
-                </code></pre>
-            </section>
 
             <section>
-                <h3>Гистограмма (Histogram) и Сводка (Summary)</h3>
+                <h3>Histogram и Summary</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -365,10 +338,15 @@
                     RequestDurationSummary.Observe(0.74);
                 </code></pre>
             </section>
+
             <section>
-                <h3>Histogram</h3>
+                <h3>/metrics</h3>
                 <pre><code data-trim class="hljs">
-                    # /metrics
+                    # TYPE example_requests_count counter
+                    example_requests_count{method="GET",handler="/hello"} 264
+
+                    # TYPE example_concurrent_requests_count gauge
+                    example_concurrent_requests_count 42
 
                     # TYPE example_request_duration histogram
                     example_request_duration_bucket{le="0.01"} 0
@@ -541,6 +519,7 @@
 
     <script src="lib/js/head.min.js"></script>
     <script src="js/reveal.js"></script>
+    <script src="plugin/highlightjs-line-numbers.min.js"></script>
 
     <script>
         // More info about config & dependencies:
@@ -561,6 +540,7 @@
                 {
                     src: 'plugin/highlight/highlight.js', async: true, callback: function () {
                         hljs.initHighlightingOnLoad();
+                        hljs.initLineNumbersOnLoad();
                     }
                 }
             ]
