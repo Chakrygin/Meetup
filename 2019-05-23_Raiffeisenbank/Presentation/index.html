@@ -111,7 +111,7 @@
             </section>
 
             <section>
-                <h2>Платформа в Ozon</h2>
+                <h2>.NET платформа в Ozon</h2>
                 <ul>
                     <li>Общие NuGet пакеты для сбора метрик, трассировок, логов и т.п.</li>
                     <li>Общие GitLab Pipelines для сборки приложений ASP.NET Core и NuGet пакетов</li>
@@ -138,7 +138,7 @@
                             <li>Почему собирать метрики «в лоб» <br />
                                 не самая хорошая идея</li>
                             <li>Как работает DiagnosticSource</li>
-                            <li>Небольшое демо</li>
+                            <li>Демо</li>
                         </ul>
                     </li>
                 </ul>
@@ -155,13 +155,9 @@
 
             <section>
                 <h2>Prometheus</h2>
-                <a href="https://prometheus.io/">
-                    https://prometheus.io/</a>
-            </section>
-
-            <section>
-                <h3>Ключевые особенности</h3>
                 <ul>
+                    <li><a href="https://prometheus.io/">
+                            https://prometheus.io/</a></li>
                     <li>Многомерная модель данных,<br />
                         метрики идентифицируются по названию <br />
                         и набору меток (пары ключ-значение)</li>
@@ -177,7 +173,7 @@
             </section>
 
             <section>
-                <h3>Библиотеки для .NET</h3>
+                <h2>Библиотеки для .NET</h2>
                 <ul>
                     <li>prometheus-net<br>
                         <a href="https://github.com/prometheus-net/prometheus-net">
@@ -220,7 +216,7 @@
             </section>
 
             <section>
-                <h3>Встроенные метрики</h3>
+                <h2>Встроенные метрики</h2>
                 <ul>
                     <li>Использование CPU<br />
                         &nbsp;&nbsp;<code>process_cpu_seconds_total</code>
@@ -253,7 +249,7 @@
             </section>
 
             <section>
-                <h3>Типы метрик в Prometheus</h3>
+                <h2>Типы метрик в Prometheus</h2>
                 <ul>
                     <li>Counter (Счётчик)</li>
                     <li>Gauge (Датчик)</li>
@@ -340,7 +336,6 @@
             </section>
 
             <section>
-                <h3>/metrics</h3>
                 <pre><code data-trim class="hljs">
                     # TYPE example_requests_count counter
                     example_requests_count{method="GET",handler="/hello"} 264
@@ -388,6 +383,7 @@
                     }
                 </code></pre>
             </section>
+
             <section>
                 <pre><code data-trim class="hljs cs">
                     // Количество используемых подключений к SqlServer
@@ -405,6 +401,7 @@
                             labelNames: new[] {"query"});
                 </code></pre>
             </section>
+
             <section>
                 <pre><code data-trim class="hljs cs">
                     public async Task&lt;int&gt; GetAnswerWithMetrics()
@@ -436,10 +433,9 @@
                     }
                 </code></pre>
             </section>
+
             <section>
                 <pre><code data-trim class="hljs">
-                    # /metrics
-
                     # TYPE sql_connections_count gauge
                     sql_connection_count{data_source="localhost\\sqlexpress",database="master"} 0
 
@@ -466,54 +462,210 @@
 
             <section>
                 <h2>DiagnosticSource</h2>
-            </section>
-
-            <section>
-                <h3>Базовые метрики</h3>
                 <ul>
-                    <li>Входящие HTTP запросы</li>
-                    <li>Исходящие HTTP запросы</li>
-                    <li>Запросы в базы данных</li>
+                    <li>Позволяет компонентам отправлять<br />
+                        события о своей работе</li>
+                    <li>Позволяет подписываться на события определённых компонентов</li>
+                    <li>Параметром события может быть произвольный .NET объект</li>
+                    <li>Обработка событий происходит in process</li>
+                    <li>Оптимизирован для случая,<br />
+                        когда нет подписчиков</li>
                 </ul>
             </section>
 
-            <!--
+            <section>
+                <h3>Отправка событий</h3>
+                <pre><code data-trim class="hljs cs">
+                    // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
+                    // src/System/Data/SqlClient/SqlConnection.cs
 
-            Платформа
-                Общие nuget пакеты для сбора метрик, трассировок, логов, пробрасывания заголовков и т.п.
-                Общие GitLab Pipelines для сборки nuget пакетов и приложений asp.net core
-                Общие дашборды по всем сервисам
+                    public sealed partial class SqlConnection : DbConnection, ICloneable
+                    {
+                        // ...
 
-            Prometheus
-                Архитектура
-                .net библиотеки
-                Подключение /metrics
-                структура метрик
-                виды метрик
-                    counter
-                    gauge
-                    histogram
-                    summary
-                ondemand метрики
-                встроенные метрики
-                    gc метрики
-                    память
-                    количество потоков
+                        // diagnostics listener
+                        private static readonly DiagnosticListener s_diagnosticListener =
+                            new DiagnosticListener("SqlClientDiagnosticListener");
 
-            Пример со сбором метрик с БД
+                        // ...
+                    }
+                </code></pre>
+            </section>
 
-            DiagnosticSource
-                Архитектура
-                Подписка на события
-                Сбор метрик
-                    запросы к БД
-                    входящие http запросы
-                    исходящие http запросы
-                Другие применения
-                    пробрасывание заголовково
-                    логирование
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
+                    // src/System/Data/SqlClient/SqlConnection.cs
 
-    -->
+                    public sealed partial class SqlConnection : DbConnection, ICloneable
+                    {
+                        // ...
+
+                        public override void Open()
+                        {
+                            Guid operationId = s_diagnosticListener
+                                .WriteConnectionOpenBefore(this);
+
+                            try { /* ... */ }
+                            catch (Exception ex) { /* ... */ }
+                            finally {
+                                // ...
+
+                                if (ex != null)
+                                    s_diagnosticListener
+                                        .WriteConnectionOpenError(operationId, this, ex);
+                                else
+                                    s_diagnosticListener
+                                        .WriteConnectionOpenAfter(operationId, this);
+                            }
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
+                    // src/System/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
+
+                    public static void WriteConnectionOpenBefore(
+                        this DiagnosticListener diagnosticListener, SqlConnection sqlConnection)
+                    {
+                        if (diagnosticListener.IsEnabled(
+                            "System.Data.SqlClient.WriteConnectionOpenBefore"))
+                        {
+                            diagnosticListener.Write(
+                                "System.Data.SqlClient.WriteConnectionOpenBefore", new
+                                {
+                                    Operation = nameof(WriteConnectionOpenBefore),
+                                    Connection = sqlConnection,
+                                    Timestamp = Stopwatch.GetTimestamp()
+                                });
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Подписка на события</h3>
+                <pre><code data-trim class="hljs cs">
+                    // NuGet: System.Diagnostics.DiagnosticSource
+                    using System.Diagnostics;
+
+                    var observer = new CustomDiagnosticObserver();
+                    DiagnosticListener.AllListeners.Subscribe(observer);
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    public class CustomDiagnosticObserver :
+                        IObserver&lt;DiagnosticListener&gt;,
+                        IObserver&lt;KeyValuePair&lt;string, object&gt;&gt;
+                    {
+                        void IObserver&lt;DiagnosticListener&gt;.OnNext(
+                            DiagnosticListener diagnosticListener)
+                        {
+                            if (diagnosticListener.Name == "SqlClientDiagnosticListener")
+                            {
+                                diagnosticListener.Subscribe(this);
+                            }
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <pre><code data-trim class="hljs cs">
+                    public class CustomDiagnosticObserver :
+                        IObserver&lt;DiagnosticListener&gt;,
+                        IObserver&lt;KeyValuePair&lt;string, object&gt;&gt;
+                    {
+                        // ...
+
+                        public void OnNext(KeyValuePair&lt;string, object&gt; pair)
+                        {
+                            if (pair.Key ==
+                                "System.Data.SqlClient.WriteConnectionOpenBefore")
+                            {
+                                // ...
+                            }
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Демо</h2>
+            </section>
+
+            <section>
+                <h2>Какие метрики можно собирать через DiagnosticSource</h2>
+                <ul>
+                    <li>Входящие HTTP запросы</li>
+                    <li>Исходящие HTTP запросы</li>
+                    <li>Запросы в базы данных
+                        <ul>
+                            <li>Через EntityFramework <br />
+                                (Для любых БД)</li>
+                            <li>Через SqlClient <br />
+                                (Только для SqlServer)</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>DiagnosticSource User's Guide</h2>
+                <a
+                    href="https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/DiagnosticSourceUsersGuide.md">
+                    https://github.com/dotnet/corefx/blob/master<br />
+                    /src/System.Diagnostics.DiagnosticSource<br />
+                    /src/DiagnosticSourceUsersGuide.md</a>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Полезные ссылки</h2>
+                <ul style="font-size: 0.8em">
+                    <li><a href="https://prometheus.io/">
+                            https://prometheus.io/</a></li>
+                    <li>Prometheus.Client<br />
+                        <a href="https://github.com/PrometheusClientNet/Prometheus.Client">
+                            https://github.com/PrometheusClientNet/Prometheus.Client</a></li>
+                    <li>Использование DiagnosticSource в .NET Core: теория<br />
+                        <a href="https://habr.com/ru/company/ozontech/blog/435896/">
+                            https://habr.com/ru/company/ozontech/blog/435896/</a></li>
+                    <li>Использование DiagnosticSource в .NET Core: практика<br />
+                        <a href="https://habr.com/ru/company/ozontech/blog/221037/">
+                            https://habr.com/ru/company/ozontech/blog/221037/</a></li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Вопросы</h3>
+                <hr />
+
+                <h3>Материалы митапа и примеры кода:</h3>
+                <a href="https://github.com/Chakrygin/Meetup/tree/master/2019-05-23_Raiffeisenbank">
+                    https://github.com/Chakrygin/Meetup/tree/master<br />
+                    /2019-05-23_Raiffeisenbank</a>
+                <hr />
+
+                <h3>Игорь Чакрыгин</h3>
+                <ul>
+                    <li><i class="fas fa-envelope"></i> igor@chakrygin.ru</li>
+                    <li><i class="fab fa-telegram-plane"></i> @ichakrygin</li>
+                    <li><i class="fab fa-vk"></i> ichakrygin</li>
+                </ul>
+            </section>
+
         </div>
     </div>
 
