@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using System.Text;
 
 namespace Demo.Observers
 {
@@ -10,15 +12,13 @@ namespace Demo.Observers
 
         protected abstract bool IsMatch(string name);
 
-        #region IObserver<DiagnosticListener>
-
         void IObserver<DiagnosticListener>.OnNext(DiagnosticListener diagnosticListener)
         {
             if (IsMatch(diagnosticListener.Name))
             {
                 _subscriptions.Add(
                     diagnosticListener.Subscribe(this));
-                
+
                 _subscriptions.Add(
                     diagnosticListener.SubscribeWithAdapter(this));
             }
@@ -33,21 +33,30 @@ namespace Demo.Observers
             _subscriptions.Clear();
         }
 
-        #endregion
-
-        #region IObserver<KeyValuePair<string, object>>
-
-        public void OnNext(KeyValuePair<string, object> value)
+        void IObserver<KeyValuePair<string, object>>.OnNext(KeyValuePair<string, object> pair)
         {
-            Console.WriteLine($"{value.Key}: {value.Value}");
+            var sb = new StringBuilder();
+
+            sb.AppendLine();
+            sb.AppendLine(pair.Key + ":");
+
+            var valueType = pair.Value.GetType();
+            var valueProperties = valueType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var property in valueProperties)
+            {
+                var propertyValue = property.GetValue(pair.Value);
+                sb.AppendLine($"\t{property.Name}: {propertyValue}");
+            }
+
+            sb.AppendLine();
+
+            Console.WriteLine(sb.ToString());
         }
 
-        public void OnError(Exception error)
+        void IObserver<KeyValuePair<string, object>>.OnError(Exception error)
         { }
 
-        public void OnCompleted()
+        void IObserver<KeyValuePair<string, object>>.OnCompleted()
         { }
-
-        #endregion
     }
 }
