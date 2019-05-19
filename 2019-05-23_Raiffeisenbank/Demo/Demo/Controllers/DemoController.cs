@@ -19,6 +19,7 @@ namespace Demo.Controllers
         {
             var links = new[]
             {
+                "/metrics",
                 "/sql",
                 "/http",
             };

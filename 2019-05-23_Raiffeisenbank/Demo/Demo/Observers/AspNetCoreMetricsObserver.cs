@@ -47,7 +47,7 @@ namespace Demo.Observers
             var stopwatch = (Stopwatch) httpContext.Items["AspNetCoreMetricsObserver.Stopwatch"];
             if (stopwatch != null)
             {
-                var action = (string) httpContext.Items["AspNetCoreMetricsObserver.Action"] ?? "unknown";
+                var action = (string) httpContext.Items["AspNetCoreMetricsObserver.Action"] ?? httpContext.Request.Path;
 
                 HttpRequestCount
                     .WithLabels(action, httpContext.Response.StatusCode.ToString())
