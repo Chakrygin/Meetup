@@ -110,15 +110,6 @@
                 <p>Игорь Чакрыгин | <img src="img/ozon.png" alt="" style="vertical-align: middle" /></p>
             </section>
 
-            <section>
-                <h2>.NET платформа в Ozon</h2>
-                <ul>
-                    <li>Общие NuGet пакеты для сбора метрик, трассировок, логов и т.п.</li>
-                    <li>Общие GitLab Pipelines для сборки приложений ASP.NET Core и NuGet пакетов</li>
-                    <li>Общие дашборды по всем сервисам</li>
-                </ul>
-            </section>
-
             <section class="img">
                 <img src="img/dashboard.png" alt="" class="" />
             </section>
@@ -216,7 +207,7 @@
             </section>
 
             <section>
-                <h2>Встроенные метрики</h2>
+                <h2>Полезные метрики «из коробки»</h2>
                 <ul>
                     <li>Использование CPU<br />
                         &nbsp;&nbsp;<code>process_cpu_seconds_total</code>
@@ -386,7 +377,7 @@
 
             <section>
                 <pre><code data-trim class="hljs cs">
-                    // Количество используемых подключений к SqlServer
+                    // Количество одновременно используемых подключений к SqlServer
                     public static Gauge ConnectionCount { get; } =
                         Metrics.CreateGauge(
                             name: "sql_connection_count",
@@ -474,6 +465,16 @@
             </section>
 
             <section>
+                <h2>Какие компоненты уже отдают события через DiagnosticSource</h2>
+                <ul>
+                    <li>ASP.NET Core</li>
+                    <li>HttpClient</li>
+                    <li>EntityFramework Core</li>
+                    <li>SqlClient</li>
+                </ul>
+            </section>
+
+            <section>
                 <h3>Отправка событий</h3>
                 <pre><code data-trim class="hljs cs">
                     // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
@@ -503,20 +504,15 @@
 
                         public override void Open()
                         {
-                            Guid operationId = s_diagnosticListener
-                                .WriteConnectionOpenBefore(this);
+                            WriteConnectionOpenBefore(s_diagnosticListener, this);
 
-                            try { /* ... */ }
-                            catch (Exception ex) { /* ... */ }
-                            finally {
+                            try
+                            {
                                 // ...
-
-                                if (ex != null)
-                                    s_diagnosticListener
-                                        .WriteConnectionOpenError(operationId, this, ex);
-                                else
-                                    s_diagnosticListener
-                                        .WriteConnectionOpenAfter(operationId, this);
+                            }
+                            finally
+                            {
+                                WriteConnectionOpenAfter(s_diagnosticListener, this);
                             }
                         }
 
@@ -531,18 +527,18 @@
                     // src/System/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
 
                     public static void WriteConnectionOpenBefore(
-                        this DiagnosticListener diagnosticListener, SqlConnection sqlConnection)
+                        DiagnosticListener diagnosticListener, SqlConnection sqlConnection)
                     {
-                        if (diagnosticListener.IsEnabled(
-                            "System.Data.SqlClient.WriteConnectionOpenBefore"))
+                        const string name = "System.Data.SqlClient.WriteConnectionOpenBefore";
+
+                        if (diagnosticListener.IsEnabled(name))
                         {
-                            diagnosticListener.Write(
-                                "System.Data.SqlClient.WriteConnectionOpenBefore", new
-                                {
-                                    Operation = nameof(WriteConnectionOpenBefore),
-                                    Connection = sqlConnection,
-                                    Timestamp = Stopwatch.GetTimestamp()
-                                });
+                            diagnosticListener.Write(name, new
+                            {
+                                Operation = nameof(WriteConnectionOpenBefore),
+                                Connection = sqlConnection,
+                                Timestamp = Stopwatch.GetTimestamp()
+                            });
                         }
                     }
                 </code></pre>
@@ -565,8 +561,7 @@
                         IObserver&lt;DiagnosticListener&gt;,
                         IObserver&lt;KeyValuePair&lt;string, object&gt;&gt;
                     {
-                        void IObserver&lt;DiagnosticListener&gt;.OnNext(
-                            DiagnosticListener diagnosticListener)
+                        void IObserver&lt;DiagnosticListener&gt;.OnNext(DiagnosticListener diagnosticListener)
                         {
                             if (diagnosticListener.Name == "SqlClientDiagnosticListener")
                             {
@@ -574,23 +569,9 @@
                             }
                         }
 
-                        // ...
-                    }
-                </code></pre>
-            </section>
-
-            <section>
-                <pre><code data-trim class="hljs cs">
-                    public class CustomDiagnosticObserver :
-                        IObserver&lt;DiagnosticListener&gt;,
-                        IObserver&lt;KeyValuePair&lt;string, object&gt;&gt;
-                    {
-                        // ...
-
                         public void OnNext(KeyValuePair&lt;string, object&gt; pair)
                         {
-                            if (pair.Key ==
-                                "System.Data.SqlClient.WriteConnectionOpenBefore")
+                            if (pair.Key == "System.Data.SqlClient.WriteConnectionOpenBefore")
                             {
                                 // ...
                             }
@@ -603,22 +584,6 @@
 
             <section>
                 <h2>Демо</h2>
-            </section>
-
-            <section>
-                <h2>Какие метрики можно собирать через DiagnosticSource</h2>
-                <ul>
-                    <li>Входящие HTTP запросы</li>
-                    <li>Исходящие HTTP запросы</li>
-                    <li>Запросы в базы данных
-                        <ul>
-                            <li>Через EntityFramework <br />
-                                (Для любых БД)</li>
-                            <li>Через SqlClient <br />
-                                (Только для SqlServer)</li>
-                        </ul>
-                    </li>
-                </ul>
             </section>
 
             <section>
