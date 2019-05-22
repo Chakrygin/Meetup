@@ -64,6 +64,15 @@
             text-align: center;
         }
 
+        .reveal .slides>section.img h3 {
+            margin-bottom: 0;
+        }
+
+        .reveal .slides img {
+            border: none;
+            box-shadow: none;
+        }
+
         .reveal .slides img {
             border: none;
             box-shadow: none;
@@ -111,6 +120,7 @@
             </section>
 
             <section class="img">
+                <h3>Один из наших дашбордов</h3>
                 <img src="img/dashboard.png" alt="" class="" />
             </section>
 
@@ -160,6 +170,7 @@
             </section>
 
             <section class="img">
+                <h3>Как происходит сбор метрик</h3>
                 <img src="img/prometheus.png" alt="" />
             </section>
 
@@ -178,7 +189,7 @@
             </section>
 
             <section>
-                <h3>Подключение в ASP.NET Core</h3>
+                <h3>Добавляем Prometheus.Client в ASP.NET Core</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client.AspNetCore;
 
@@ -203,6 +214,7 @@
             </section>
 
             <section class="img">
+                <h3>Метрики в браузере</h3>
                 <img src="img/metrics.png" alt="" />
             </section>
 
@@ -210,47 +222,47 @@
                 <h2>Полезные метрики «из коробки»</h2>
                 <ul>
                     <li>Использование CPU<br />
-                        &nbsp;&nbsp;<code>process_cpu_seconds_total</code>
+                        (<code>process_cpu_seconds_total</code>)
                     </li>
                     <li>Использование памяти<br />
-                        &nbsp;&nbsp;<code>dotnet_totalmemory</code>
+                        (<code>dotnet_totalmemory</code>)
                     </li>
                     <li>Количество сборок мусора<br />
-                        &nbsp;&nbsp;<code>dotnet_collection_count_total</code>
+                        (<code>dotnet_collection_count_total</code>)
                     </li>
                     <li>Количество потоков<br />
-                        &nbsp;&nbsp;<code>process_num_threads</code>
+                        (<code>process_num_threads</code>)
                     </li>
                 </ul>
             </section>
 
             <section class="img">
-                <h3>dotnet_collection_count_total</h3>
+                <h3>Метрика dotnet_collection_count_total</h3>
                 <img src="img/gc_1.png" alt="" />
             </section>
 
             <section class="img">
-                <h3>dotnet_collection_count_total</h3>
+                <h3>Метрика dotnet_collection_count_total</h3>
                 <img src="img/gc_2.png" alt="" />
             </section>
 
             <section class="img">
-                <h3>process_num_threads</h3>
+                <h3>Метрика process_num_threads</h3>
                 <img src="img/threads.png" alt="" />
             </section>
 
             <section>
                 <h2>Типы метрик в Prometheus</h2>
                 <ul>
-                    <li>Counter (Счётчик)</li>
-                    <li>Gauge (Датчик)</li>
-                    <li>Histogram (Гистограмма)</li>
-                    <li>Summary (Сводка)</li>
+                    <li>Счётчик (Counter)</li>
+                    <li>Датчик (Gauge)</li>
+                    <li>Гистограмма (Histogram)</li>
+                    <li>Сводка (Summary)</li>
                 </ul>
             </section>
 
             <section>
-                <h3>Counter</h3>
+                <h3>Счётчик (Counter)</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -267,7 +279,7 @@
             </section>
 
             <section>
-                <h3>Метки</h3>
+                <h3>Счётчик с дополнительными метками</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -286,7 +298,7 @@
             </section>
 
             <section>
-                <h3>Gauge</h3>
+                <h3>Датчик (Gauge)</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -304,7 +316,7 @@
             </section>
 
             <section>
-                <h3>Histogram и Summary</h3>
+                <h3>Гистограмма (Histogram) и Сводка (Summary)</h3>
                 <pre><code data-trim class="hljs cs">
                     using Prometheus.Client;
 
@@ -327,6 +339,7 @@
             </section>
 
             <section>
+                <h3>Пример метрик</h3>
                 <pre><code data-trim class="hljs">
                     # TYPE example_requests_count counter
                     example_requests_count{method="GET",handler="/hello"} 264
@@ -361,6 +374,7 @@
             </section>
 
             <section>
+                <h3>Простой запрос в БД</h3>
                 <pre><code data-trim class="hljs cs">
                     public async Task&lt;int&gt; GetAnswer()
                     {
@@ -376,6 +390,7 @@
             </section>
 
             <section>
+                <h3>Метрики для запросов в БД</h3>
                 <pre><code data-trim class="hljs cs">
                     // Количество одновременно используемых подключений к SqlServer
                     public static Gauge ConnectionCount { get; } =
@@ -394,30 +409,26 @@
             </section>
 
             <section>
+                <h3>Простой запрос в БД со сбором метрик</h3>
                 <pre><code data-trim class="hljs cs">
                     public async Task&lt;int&gt; GetAnswerWithMetrics()
                     {
                         const string query = "SELECT 42;";
-
                         using (var connection = new SqlConnection(ConnectionString))
                         {
                             await connection.OpenAsync();
 
                             ConnectionCount
-                                .WithLabels(connection.DataSource, connection.Database)
-                                .Inc();
+                                .WithLabels(connection.DataSource, connection.Database).Inc();
 
                             var stopwatch = Stopwatch.StartNew();
                             var result = await connection
                                 .QueryFirstOrDefaultAsync&lt;int&gt;(query);
 
                             CommandDurationSeconds
-                                .WithLabels(query)
-                                .Observe(stopwatch.Elapsed.TotalSeconds);
-
+                                .WithLabels(query).Observe(stopwatch.Elapsed.TotalSeconds);
                             ConnectionCount
-                                .WithLabels(connection.DataSource, connection.Database)
-                                .Dec();
+                                .WithLabels(connection.DataSource, connection.Database).Dec();
 
                             return result;
                         }
@@ -426,6 +437,7 @@
             </section>
 
             <section>
+                <h3>Собранные метрики</h3>
                 <pre><code data-trim class="hljs">
                     # TYPE sql_connections_count gauge
                     sql_connection_count{data_source="localhost\\sqlexpress",database="master"} 0
@@ -454,13 +466,16 @@
             <section>
                 <h2>DiagnosticSource</h2>
                 <ul>
-                    <li>Позволяет компонентам отправлять<br />
-                        события о своей работе</li>
-                    <li>Позволяет подписываться на события определённых компонентов</li>
-                    <li>Параметром события может быть произвольный .NET объект</li>
-                    <li>Обработка событий происходит in process</li>
-                    <li>Оптимизирован для случая,<br />
-                        когда нет подписчиков</li>
+                    <li>Позволяет отдельным компонентам <br />
+                        отправлять события о своей работе</li>
+                    <li>Позволяет подписываться на события <br />
+                        других компонентов</li>
+                    <li>Параметром события может <br />
+                        быть любой .NET объект</li>
+                    <li>Обработка событий происходит <br />
+                        in process, без сериализации</li>
+                    <li>Оптимизирован для случая, когда<br />
+                        нет подписчиков</li>
                 </ul>
             </section>
 
@@ -475,7 +490,7 @@
             </section>
 
             <section>
-                <h3>Отправка событий</h3>
+                <h3>Отправка событий: DiagnosticListener</h3>
                 <pre><code data-trim class="hljs cs">
                     // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
                     // src/System/Data/SqlClient/SqlConnection.cs
@@ -494,6 +509,7 @@
             </section>
 
             <section>
+                <h3>Отправка событий: SqlConnection.Open</h3>
                 <pre><code data-trim class="hljs cs">
                     // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
                     // src/System/Data/SqlClient/SqlConnection.cs
@@ -522,6 +538,7 @@
             </section>
 
             <section>
+                <h3>Отправка событий: IsEnabled и Write</h3>
                 <pre><code data-trim class="hljs cs">
                     // https://github.com/dotnet/corefx/blob/master/src/System.Data.SqlClient/
                     // src/System/Data/SqlClient/SqlClientDiagnosticListenerExtensions.cs
@@ -545,7 +562,7 @@
             </section>
 
             <section>
-                <h3>Подписка на события</h3>
+                <h3>Подписка на события: AllListeners</h3>
                 <pre><code data-trim class="hljs cs">
                     // NuGet: System.Diagnostics.DiagnosticSource
                     using System.Diagnostics;
@@ -556,6 +573,7 @@
             </section>
 
             <section>
+                <h3>Подписка на события: DiagnosticObserver</h3>
                 <pre><code data-trim class="hljs cs">
                     public class CustomDiagnosticObserver :
                         IObserver&lt;DiagnosticListener&gt;,
@@ -617,7 +635,7 @@
                 <h3>Вопросы</h3>
                 <hr />
 
-                <h3>Материалы митапа и примеры кода:</h3>
+                <h3>Презентация и исходники демо:</h3>
                 <a href="https://github.com/Chakrygin/Meetup/tree/master/2019-05-23_Raiffeisenbank">
                     https://github.com/Chakrygin/Meetup/tree/master<br />
                     /2019-05-23_Raiffeisenbank</a>
@@ -642,10 +660,12 @@
         // More info about config & dependencies:
         // - https://github.com/hakimel/reveal.js#configuration
         // - https://github.com/hakimel/reveal.js#dependencies
+        var size = "100%"
+
         Reveal.initialize({
 
-            width: "100%",
-            height: "100%",
+            width: size,
+            height: size,
             transition: 'slide', // none/fade/slide/convex/concave/zoom
             slideNumber: true,
             hash: true,
