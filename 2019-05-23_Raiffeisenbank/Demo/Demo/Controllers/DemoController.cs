@@ -33,17 +33,21 @@ namespace Demo.Controllers
         }
 
         [HttpGet("sql")]
-        public async Task<string> SqlMetricsDemo([FromQuery] string name = "World")
+        public async Task<string> SqlMetricsDemo([FromQuery] string name = "SQL metrics")
         {
             var csb = new SqlConnectionStringBuilder();
-            csb.DataSource = "localhost\\sqlexpress";
+            csb.DataSource = "localhost";
             csb.InitialCatalog = "master";
-            csb.IntegratedSecurity = true;
+            //csb.IntegratedSecurity = true;
+            csb.UserID = "sa";
+            csb.Password = "Password12!";
 
             var connectionString = csb.ToString();
-            
+
             using (var connection = new SqlConnection(connectionString))
             {
+                await connection.OpenAsync();
+
                 var result = await connection.ExecuteScalarAsync<string>(
                     "SELECT 'Hello, ' + @name + '!'", new {name});
 
@@ -52,10 +56,10 @@ namespace Demo.Controllers
         }
 
         [HttpGet("http")]
-        public async Task<string> HttpMetricsDemo([FromQuery] string text = "test")
+        public async Task<string> HttpMetricsDemo()
         {
-            var requestUri = 
-                "https://yandex.ru/search/?text=" + WebUtility.UrlEncode(text);
+            var requestUri =
+                "http://localhost:5000/hello";
 
             using (var http = new HttpClient())
             using (var response = await http.GetAsync(requestUri))
@@ -64,6 +68,13 @@ namespace Demo.Controllers
 
                 return content;
             }
+        }
+
+        [HttpGet("hello")]
+        public IActionResult Hello([FromQuery]string name = "HTTP metrics")
+        {
+            var message = $"Hello, {name}!";
+            return Ok(message);
         }
     }
 }
