@@ -35,7 +35,7 @@
         }
 
         .reveal h2 {
-            font-size: 1.3em !important;
+            font-size: 1.1em !important;
         }
 
         .reveal h3,
@@ -123,11 +123,12 @@
                 <ul>
                     <li>Различные способы использования HttpClient.</li>
                     <li>Библиотека RestEase.</li>
-                    <!-- <li>Зачем нужен RestEase и как его использовать.</li>
-                    <li>Как избавиться от дублирования кода <br>
-                        при написании REST-клиентов.</li>
-                    <li>Обработка и пробрасывание исключений <br>
-                        между сервисами для REST-клиентов.</li> -->
+                    <li>Наши расширения для RestEase:
+                        <ul>
+                            <li>Регистрация RestClient в одну строку.</li>
+                            <li>Обработка и пробрасывание исключений.</li>
+                        </ul>
+                    </li>
                 </ul>
             </section>
 
@@ -340,7 +341,7 @@
                 <ul>
                     <li>Библиотека для реализации REST-клиентов.</li>
                     <li><a href="https://github.com/canton7/RestEase">
-                        https://github.com/canton7/RestEase</a></li>
+                            https://github.com/canton7/RestEase</a></li>
                     <li>Особенности:
                         <ul>
                             <li>Простота</li>
@@ -411,6 +412,257 @@
 
             <section>
                 <h2>Возможности RestEase</h2>
+            </section>
+
+            <section>
+                <h2>Атрибуты HTTP-методов и параметров</h2>
+                <pre><code data-trim class="hljs cs">
+                    public interface IUserApi
+                    {
+                        [Get("users")]
+                        Task&lt;List&lt;User&gt;&gt; GetUsers([Query] int page = 1);
+
+                        [Get("users/{userId}")]
+                        Task&lt;User&gt; GetUser([Path] long userId);
+
+                        [Post("users")]
+                        Task CreateUser([Body] User user);
+
+                        [Put("users/{userId}")]
+                        Task UpdateUser([Path] long userId, [Body] User user);
+
+                        [Delete("users/{userId}")]
+                        Task DeleteUser([Path] long userId);
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Типы возвращаемых значений</h2>
+                <ul>
+                    <li><code>Task</code></li>
+                    <li><code>Task&lt;T&gt;</code> (Используется Json.NET)</li>
+                    <li><code>Task&lt;string&gt;</code></li>
+                    <li><code>Task&lt;HttpResponseMessage&gt;</code></li>
+                    <li><code>Task&lt;Response&lt;T&gt;&gt;</code></li>
+                    <li><code>Task&lt;Stream&gt;</code></li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Поддержка CancellationToken</h2>
+                <pre><code data-trim class="hljs cs">
+                    public interface IUserApi
+                    {
+                        [Post("users")]
+                        Task CreateUser([Body] User user, CancellationToken cancellationToken);
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Поддержка RawQueryString</h2>
+                <pre><code data-trim class="hljs cs">
+                    public interface IUserApi
+                    {
+                        [Get("users/search")]
+                        Task&lt;List&lt;User&gt;&gt; SearchUsers(
+                            [RawQueryString] SearchUsersRequest request);
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Обработка ошибок (ApiException)</h2>
+                <pre><code data-trim class="hljs cs">
+                    try
+                    {
+                        return _userApi.GetUser(userId);
+                    }
+                    catch (ApiException ex)
+                        when(ex.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        return null;
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Обработка ошибок (AllowAnyStatusCode)</h2>
+                <pre><code data-trim class="hljs cs">
+                    public interface IUserApi
+                    {
+                        [AllowAnyStatusCode]
+                        [Get("users/{userId}")]
+                        Task&lt;User&gt; GetUser([Path] long userId);
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Другие возможности:</h2>
+                <ul>
+                    <li>Передача параметров через свойства, <br>
+                        а не через параметры метода.</li>
+                    <li>Поддержка обобщённых интерфейсов и методов</li>
+                    <li>Поддержка наследования интерфейсов</li>
+                    <li>Возможности для кастомизации</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Расширение AddRestClient для RestEase</h2>
+            </section>
+
+            <section>
+                <h3>Регистрируем RestClient</h3>
+                <pre><code data-trim class="hljs cs">
+                    public sealed class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services
+                                .AddHttpClient(nameof(IGitHubClient), httpClient =>
+                                {
+                                    httpClient.BaseAddress = new Uri("https://api.github.com");
+                                })
+                                .AddTypedClient&lt;IGitHubClient&gt;(httpClient =>
+                                {
+                                    return RestClient.For&lt;IGitHubClient&gt;(httpClient);
+                                });
+
+                            // ...
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Расширение AddRestClient</h2>
+                <pre><code data-trim class="hljs cs">
+                    public static class RestClientExtensions
+                    {
+                        public static IHttpClientBuilder AddRestClient&lt;T&gt;(
+                            this IServiceCollection services, Action&lt;HttpClient&gt; configure = null)
+                            where T : class
+                        {
+                            return services
+                                .AddHttpClient(typeof(T).Name, (serviceProvider, httpClient) =>
+                                {
+                                    var configuration = serviceProvider.GetRequiredService&lt;IConfiguration&gt;();
+                                    var section = configuration.GetSection(typeof(T).Name.TrimStart('I'));
+                                    httpClient.BaseAddress = section.GetValue&lt;Uri&gt;("BaseAddress");
+                                    httpClient.Timeout = section.GetValue&lt;TimeSpan&gt;("Timeout");
+
+                                    if (configure != null)
+                                        configure(httpClient);
+                                })
+                                .AddTypedClient&lt;T&gt;(RestClient.For&lt;T&gt;);
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Используем AddRestClient</h3>
+                <pre><code data-trim class="hljs cs">
+                    public sealed class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddRestClient&lt;IGitHubClient&gt;();
+
+                            // ...
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>appsettings.json</h3>
+                <pre><code data-trim class="hljs json">
+                    {
+                        "GitHubClient": {
+                            "BaseAddress": "https://api.github.com",
+                            "Timeout": "00:00:10"
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>Обработка исключений с RestEase</h2>
+            </section>
+
+            <section>
+                <h3>Фильтр для обработки исключений</h3>
+                <pre><code data-trim class="hljs cs">
+                    public sealed class ExceptionFilter : ExceptionFilterAttribute
+                    {
+                        private readonly IHostingEnvironment _hostingEnvironment;
+
+                        public ExceptionFilter(IHostingEnvironment hostingEnvironment)
+                        {
+                            _hostingEnvironment = hostingEnvironment;
+                        }
+
+                        public override void OnException(ExceptionContext context)
+                        {
+                            context.Result = context.Exception is ApiException ex
+                                ? GetApiExceptionResult(ex)
+                                : GetExceptionResult(context.Exception);
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ответ сервиса для обычных ошибок</h3>
+                <pre><code data-trim class="hljs cs">
+                    private IActionResult GetExceptionResult(Exception ex)
+                    {
+                        var response = new ExceptionResponse
+                        {
+                            ApplicationName = _hostingEnvironment.ApplicationName,
+                            EnvironmentName = _hostingEnvironment.EnvironmentName,
+                            Message = ex.Message,
+                            StackTrace = ex.StackTrace.Split(Environment.NewLine),
+                        };
+
+                        var result = new JsonResult(response);
+                        result.StatusCode = StatusCodes.Status500InternalServerError;
+
+                        return result;
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ответ сервиса для HTTP-ошибок</h3>
+                <pre><code data-trim class="hljs cs">
+                    private IActionResult GetApiExceptionResult(ApiException ex)
+                    {
+                        return new ContentResult
+                        {
+                            StatusCode = (int) ex.StatusCode,
+                            Content = ex.Content,
+                            ContentType = ex.ContentHeaders.ContentType.ToString(),
+                        };
+                    }
+                </code></pre>
+            </section>
+
+            <section class="img">
+                <h3>Пример исключения</h3>
+                <img src="img/ex.png" alt="" />
+            </section>
+
+            <section>
+                <h3>Вопросы</h3>
             </section>
 
         </div>
