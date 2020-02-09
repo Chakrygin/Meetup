@@ -453,6 +453,48 @@
             </section>
 
             <section>
+                <h2>Шаблоны .NET проектов</h2>
+            </section>
+
+            <section class="img">
+                <img src="img/templates.PNG" alt="" />
+            </section>
+
+            <section>
+                <h3>.NET Application Repo Template (o3-app)</h3>
+                <pre><code data-trim class="hljs bash">
+                    dotnet nuget locals http-cache --clear
+
+                    dotnet new --install Ozon.Templates.ApplicationRepo \
+                        --nuget-source https://nuget.ozon.ru/nuget
+
+                    dotnet new o3-app --name Ozon.Example.MyApp \
+                        --app-name "dotnet-example" \
+                        --app-namespace "dotnet"
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>.NET Packages Repo Template (o3-pkg)</h3>
+                <pre><code data-trim class="hljs bash">
+                    dotnet nuget locals http-cache --clear
+
+                    dotnet new --install Ozon.Templates.PackagesRepo \
+                        --nuget-source https://nuget.ozon.ru/nuget
+
+                    dotnet new o3-pkg --name Ozon.Example.MyPkg
+                </code></pre>
+            </section>
+
+            <section>
+                <h2>GitLab CI</h2>
+            </section>
+
+            <section>
+                <h2>Планы и идеи на будущее</h2>
+            </section>
+
+            <section>
                 <h3>Вопросы</h3>
             </section>
 
