@@ -1,0 +1,495 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title></title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" />
+
+    <style>
+        .reveal h1,
+        .reveal h2,
+        .reveal h3,
+        .reveal h4,
+        .reveal h5,
+        .reveal h6 {
+            text-transform: none;
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .reveal p,
+        .reveal li {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+
+        .reveal h1 {
+            font-size: 1.1em !important;
+        }
+
+        .reveal h2 {
+            font-size: 1.1em !important;
+        }
+
+        .reveal h3,
+        .reveal h4,
+        .reveal h5,
+        .reveal h6 {
+            font-size: 1.0em !important;
+        }
+
+        .reveal .slides>section {
+            text-align: center;
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .reveal .slides>section {
+            width: 1000px !important;
+            text-align: left;
+        }
+
+        .reveal .slides>section.img {
+            min-width: 1000px !important;
+            width: 90% !important;
+            height: 100% !important;
+            text-align: center;
+        }
+
+        .reveal .slides>section.img h3 {
+            margin-bottom: 0;
+        }
+
+        .reveal .slides img {
+            border: none;
+            box-shadow: none;
+        }
+
+        .reveal .slides img {
+            border: none;
+            box-shadow: none;
+        }
+
+        .reveal .slide-number {
+            top: 8px;
+            bottom: unset;
+            font-size: 42px;
+        }
+
+        .reveal pre {
+            width: fit-content;
+            margin: 0px;
+        }
+
+        .reveal pre code {
+            font-family: Consolas, monospace !important;
+            max-height: none;
+            min-width: 800px;
+            padding: 10px;
+        }
+    </style>
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <link rel="stylesheet" href="plugin/highlight/themes/vs2015.css" />
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <section>
+                <h1>Новости .NET платформы</h1>
+                <p>Игорь Чакрыгин | <img src="img/ozon.png" alt="" style="vertical-align: middle" /></p>
+            </section>
+
+            <section>
+                <h2>Ozon.Platform</h2>
+            </section>
+
+            <section>
+                <h3>gRPC</h3>
+                <ul>
+                    <li>Переход на gRPC от Microsoft</li>
+                    <li>Библиотека Ozon.Grpc.AspNetCore <br>
+                        больше не поддерживается</li>
+                    <li>Пока есть сложнрсти с генерацией <br>
+                        клиентов через grpc-nuget</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Пример gRPC сервера</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddGrpc();
+                            services.AddControllers();
+                        }
+
+                        public void Configure(IApplicationBuilder app, IHostEnvironment env)
+                        {
+                            app.UseRouting();
+                            app.UseEndpoints(builder =>
+                            {
+                                builder.MapControllers();
+                                builder.MapGrpcService&lt;GreeterService&gt;();
+                            });
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Конфигурация Kestrel</h3>
+                <pre><code data-trim class="hljs cs">
+                    var host = Host.CreateDefaultBuilder(args)
+                        .ConfigureWebHostDefaults(webBuilder => webBuilder
+                            .UseStartup&lt;Startup&gt;()
+                            .ConfigureKestrel(options =>
+                            {
+                                options.Listen(IPAddress.Any, 80, listenOptions =>
+                                    listenOptions.Protocols = HttpProtocols.Http1);
+
+                                options.Listen(IPAddress.Any, 82, listenOptions =>
+                                    listenOptions.Protocols = HttpProtocols.Http2);
+
+                                options.Listen(IPAddress.Any, 84, listenOptions =>
+                                    listenOptions.Protocols = HttpProtocols.Http1);
+                            }))
+                        .Build();
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Пример gRPC клиента</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddGrpcClient&lt;Greeter.GreeterClient&gt;(options =>
+                            {
+                                options.Address = new Uri("...");
+                            });
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Http2UnencryptedSupport</h3>
+                <pre><code data-trim class="hljs cs">
+                    AppContext.SetSwitch(
+                        "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Изменения в метриках и трассировках</h3>
+                <ul>
+                    <li>Обновили Prometheus.Client до 3.1+</li>
+                    <li>Переделали метрики для HTTP и GRPC <br>
+                        (форкнули OpenTracing.Contrib.NetCore)</li>
+                    <li>Диагностики для Npgsql так и не появились. <br>
+                        Нужно использовать Ozon.Diagnostics.Npgsql</li>
+                    <li>Диагностики для EntityFramework <br>
+                        больше не будут использоваться.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>ICollector (вместо IOnDemandCollector)</h3>
+                <pre><code data-trim class="hljs cs">
+                    internal sealed class AppMetricsCollector : ICollector
+                    {
+                        public AppMetricsCollector()
+                        {
+                            Configuration = new CollectorConfiguration(nameof(AppMetricsCollector));
+
+                            MetricNames = new[]
+                            {
+                                "ozon_app_build_info",
+                                "ozon_app_metrics_standard",
+                            };
+
+                            // ...
+                        }
+
+                        public ICollectorConfiguration Configuration { get; }
+                        public IReadOnlyList&lt;string&gt; MetricNames { get; }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>ICollector (вместо IOnDemandCollector)</h3>
+                <pre><code data-trim class="hljs cs">
+                    internal sealed class AppMetricsCollector : ICollector
+                    {
+                        // ...
+
+                        public void Collect(IMetricsWriter writer)
+                        {
+                            writer
+                                .WriteMetricHeader("ozon_app_build_info", MetricType.Gauge)
+                                .WriteSample(0.0, labels: _buildInfoLabels)
+                                .EndMetric();
+
+                            writer
+                                .WriteMetricHeader("ozon_app_metrics_standard", MetricType.Gauge)
+                                .WriteSample(0.0, labels: _metricsStandardLabels)
+                                .EndMetric();
+                        }
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Улучшения в названиях спанов и метрик</h3>
+                <img src="img/traces_01.PNG" alt="" />
+            </section>
+
+            <section>
+                <h3>Улучшения в названиях спанов и метрик</h3>
+                <img src="img/traces_02.PNG" alt="" />
+            </section>
+
+            <section>
+                <h3>Ozon.Diagnostics.Npgsql</h3>
+                <pre><code data-trim class="hljs cs">
+                    using NpgsqlDiagnosticsConnection connection =
+                        new NpgsqlConnection(ConnectionString).WithDiagnostics();
+
+                    using NpgsqlDiagnosticsCommand command =
+                        new NpgsqlCommand(Query, (NpgsqlConnection) connection).WithDiagnostics();
+
+                    connection.Open();
+
+                    // ...
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Diagnostics.Npgsql.EntityFrameworkCore</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddDbContext&lt;DbContext&gt;(builder =>
+                            {
+                                builder.UseNpgsql("...");
+                                builder.UseNpgsqlDiagnostics();
+                            });
+
+                            // ...
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Swagger</h3>
+                <ul>
+                    <li>RC версии не работали с Endpoint Routing</li>
+                    <li>Swagger не работал на 84 порту из-за CORS, <br>
+                        перенесли на 80 порт.</li>
+                    <li>Поддержка нескольких режимов работы</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Отключение Swagger</h3>
+                <pre><code data-trim class="hljs cs">
+                    var host = Host.CreateDefaultBuilder(args)
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder.UsePlatform&lt;Startup&gt;(options =>
+                            {
+                                options.SwaggerMode = PlatformSwaggerMode.Disabled;
+                            });
+                        })
+                        .Build();
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Platform.Etcd</h3>
+                <ul>
+                    <li>Обновление EtcdClient</li>
+                    <li>Поддержка балансировки</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Ozon.Platform.Etcd</h3>
+                <pre><code data-trim class="hljs cs">
+                    var host = Host.CreateDefaultBuilder(args)
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder
+                                .UsePlatform&lt;Startup&gt;()
+                                .UsePlatformEtcd();
+                        })
+                        .Build();
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Platform.Vault</h3>
+                <ul>
+                    <li>Несколько реализаций, <br>
+                        у нас используется последняя</li>
+                    <li>Указать в vaules.yaml: <br>
+                        <code>vaultScheme: "2"</code></li>
+                    <li>LDAP для локальной разработки:</li>
+                </ul>
+
+                <pre><code data-trim class="hljs bash">
+                    vault login -address=https://vault.s.o3.ru:8200 -method=ldap -username=%username%
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Platform.Vault</h3>
+                <pre><code data-trim class="hljs cs">
+                    var host = Host.CreateDefaultBuilder(args)
+                        .ConfigureWebHostDefaults(webBuilder =>
+                        {
+                            webBuilder
+                                .UsePlatform&lt;Startup&gt;()
+                                .UsePlatformVault(project: "dotnet/sandbox/vault");
+                        })
+                        .Build();
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Migrations</h3>
+                <ul>
+                    <li>Entity Framework Core</li>
+                    <li>Evolve</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Ozon.Migrations.EntityFrameworkCore</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Program
+                    {
+                        public static void Main(string[] args)
+                        {
+                            var host = CreateHostBuilder(args)
+                                .Build();
+
+                            host.RunWithMigrate&lt;DatabaseContext&gt;(args);
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Ozon.Migrations.Evolve</h3>
+                <ul>
+                    <li><a href="https://github.com/lecaillon/Evolve">
+                            https://github.com/lecaillon/Evolve</a></li>
+                    <li>Поддержка двух видов миграций:
+                        <ul>
+                            <li>Versioned Migration: <br>
+                                <i>V1_3_1_1__Create_some_table.sql</i></li>
+                            <li>Repeatable Migration: <br>
+                                <i>R__Create_some_views.sql</i></li>
+                        </ul>
+
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Ozon.Migrations.Evolve</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Program
+                    {
+                        public static void Main(string[] args)
+                        {
+                            var host = CreateHostBuilder(args)
+                                .Build();
+
+                            host.RunWithMigrate(configuration =>
+                            {
+                                return configuration.GetConnectionString("Database");
+                            });
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Вопросы</h3>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+    <script src="plugin/highlightjs-line-numbers.min.js"></script>
+
+    <script>
+        // More info about config & dependencies:
+        // - https://github.com/hakimel/reveal.js#configuration
+        // - https://github.com/hakimel/reveal.js#dependencies
+        var size = "100%"
+
+        Reveal.initialize({
+
+            width: size,
+            height: size,
+            transition: 'slide', // none/fade/slide/convex/concave/zoom
+            slideNumber: true,
+            hash: true,
+
+            dependencies: [
+                { src: 'plugin/markdown/marked.js' },
+                { src: 'plugin/markdown/markdown.js' },
+                { src: 'plugin/notes/notes.js', async: true },
+                {
+                    src: 'plugin/highlight/highlight.js', async: true, callback: function () {
+                        hljs.initHighlightingOnLoad();
+                        hljs.initLineNumbersOnLoad();
+                    }
+                }
+            ]
+        });
+    </script>
+</body>
+
+</html>
