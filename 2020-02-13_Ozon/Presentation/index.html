@@ -457,7 +457,8 @@
             </section>
 
             <section class="img">
-                <img src="img/templates.PNG" alt="" />
+                <h3>Кастомные шаблоны проектов</h3>
+                <img src="img/templates_01.PNG" alt="" />
             </section>
 
             <section>
@@ -486,12 +487,77 @@
                 </code></pre>
             </section>
 
+            <section class="img">
+                <h3>Собственные шаблоны проектов - репозиторий</h3>
+                <img src="img/templates_02.PNG" alt="" />
+            </section>
+
+            <section>
+                <h3>Собственные шаблоны проектов - .gitlab-ci.yml</h3>
+                <pre><code data-trim class="hljs yaml">
+                    include:
+                    - project: 'dotnet/ci/template'
+                        ref: '0.8'
+                        file: 'template.netcore3.0.gitlab-ci.yml'
+
+                    variables:
+                      TEMPLATE_VERSION: '0.1'
+                </code></pre>
+            </section>
+
             <section>
                 <h2>GitLab CI</h2>
             </section>
 
             <section>
+                <h3>.gitlab-ci.yml</h3>
+                <pre><code data-trim class="hljs yaml">
+                    include:
+                      - project: 'dotnet/ci/application'
+                        ref: '0.8'
+                        file: 'application.netcore3.0.gitlab-ci.yml'
+
+                    variables:
+                      APP_NAME: 'exch-joborch-table2kafka-v2'
+                      APP_NAMESPACE: 'exch'
+                      APP_VERSION: '0.1'
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>GitLab CI</h3>
+                <ul>
+                    <li>Common Pipeline d</li>
+                    <li>Переменные APP_NAME и APP_NAMESPACE</li>
+                </ul>
+
+            </section>
+
+            <!-- - Для ASP.NET Core
+                    - Переменные APP_NAME и APP_NAMESPACE
+                    - генерация migration
+                - Фреймворк для разработки пайплайнов (отдельный доклад)
+                - Пайплайн для MSSQL
+                - Пайплайн для докерфайлов -->
+
+            <section>
+                <h3>Актуализация документации</h3>
+                <ul>
+                    <li><a href="https://confluence.ozon.ru/display/DOTNET">
+                            https://confluence.ozon.ru/display/DOTNET</a></li>
+                    <li>.NET Onboarding</li>
+                </ul>
+            </section>
+
+            <section>
                 <h2>Планы и идеи на будущее</h2>
+                <ul>
+                    <li>Разбираемся с SSO (Keycloak), <br />
+                        постараемся сделать доку</li>
+                    <li>Пайплайн для протофайлов</li>
+                    <li>Пайплайн для dtrack (аудит уязвимостей)</li>
+                    <li>Пайплайн для интеграционных тестов</li>
+                </ul>
             </section>
 
             <section>
