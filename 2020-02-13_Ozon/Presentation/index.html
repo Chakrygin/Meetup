@@ -119,6 +119,16 @@
             </section>
 
             <section>
+                <h3>О чём доклад?</h3>
+                <ul>
+                    <li>Изменения в библиотеках</li>
+                    <li>Изменения в шаблонах проектов</li>
+                    <li>Изменения в пайплайнах</li>
+                    <li>Планы на будущее</li>
+                </ul>
+            </section>
+
+            <section>
                 <h2>Ozon.Platform</h2>
             </section>
 
@@ -338,6 +348,15 @@
             </section>
 
             <section>
+                <h3>Редиректы с debug-порта</h3>
+                <ul>
+                    <li>/grafana</li>
+                    <li>/graylog</li>
+                    <li>/jaeger</li>
+                </ul>
+            </section>
+
+            <section>
                 <h3>Ozon.Platform.Etcd</h3>
                 <ul>
                     <li>Обновление EtcdClient</li>
@@ -454,10 +473,6 @@
 
             <section>
                 <h2>Шаблоны .NET проектов</h2>
-            </section>
-
-            <section class="img">
-                <h3>Кастомные шаблоны проектов</h3>
                 <img src="img/templates_01.PNG" alt="" />
             </section>
 
@@ -487,16 +502,16 @@
                 </code></pre>
             </section>
 
-            <section class="img">
-                <h3>Собственные шаблоны проектов - репозиторий</h3>
+            <section>
+                <h3>Шаблон проекта: репозиторий</h3>
                 <img src="img/templates_02.PNG" alt="" />
             </section>
 
             <section>
-                <h3>Собственные шаблоны проектов - .gitlab-ci.yml</h3>
+                <h3>Шаблон проекта: .gitlab-ci.yml</h3>
                 <pre><code data-trim class="hljs yaml">
                     include:
-                    - project: 'dotnet/ci/template'
+                      - project: 'dotnet/ci/template'
                         ref: '0.8'
                         file: 'template.netcore3.0.gitlab-ci.yml'
 
@@ -510,7 +525,7 @@
             </section>
 
             <section>
-                <h3>.gitlab-ci.yml</h3>
+                <h3>Изменения в .gitlab-ci.yml</h3>
                 <pre><code data-trim class="hljs yaml">
                     include:
                       - project: 'dotnet/ci/application'
@@ -525,28 +540,40 @@
             </section>
 
             <section>
-                <h3>GitLab CI</h3>
+                <h3>Изменения в .gitlab-ci.yml</h3>
                 <ul>
-                    <li>Common Pipeline d</li>
-                    <li>Переменные APP_NAME и APP_NAMESPACE</li>
+                    <li>Минимизация .gitlab-ci.yml</li>
+                    <li>Обязательное указание сервиса и неймспейса</li>
+                    <li>Генерация migration скрипта</li>
                 </ul>
-
             </section>
 
-            <!-- - Для ASP.NET Core
-                    - Переменные APP_NAME и APP_NAMESPACE
-                    - генерация migration
-                - Фреймворк для разработки пайплайнов (отдельный доклад)
-                - Пайплайн для MSSQL
-                - Пайплайн для докерфайлов -->
+            <section>
+                <h3>Изменения в .gitlab-ci.yml в будущем</h3>
+                <ul>
+                    <li>Снова вынести Common Pipeline</li>
+                    <li>Вернуть SERVICE_NAME и K8S_NAMESPACE</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>А также...</h3>
+                <ul>
+                    <li>Фреймворк для разработки пайплайнов</li>
+                    <li>Пайплайн для докерфайлов</li>
+                    <li>Пайплайн для MS SQL</li>
+                </ul>
+            </section>
 
             <section>
                 <h3>Актуализация документации</h3>
-                <ul>
-                    <li><a href="https://confluence.ozon.ru/display/DOTNET">
-                            https://confluence.ozon.ru/display/DOTNET</a></li>
-                    <li>.NET Onboarding</li>
-                </ul>
+                <p><a href="https://confluence.ozon.ru/display/DOTNET">
+                        https://confluence.ozon.ru/display/DOTNET</a></p>
+            </section>
+
+            <section>
+                <h3>.NET Onboarding</h3>
+                <img src="img/onboarding.PNG" alt="" />
             </section>
 
             <section>
