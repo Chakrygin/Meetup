@@ -133,6 +133,15 @@
             </section>
 
             <section>
+                <h3>Переход на .NET Core 3.0</h3>
+                <ul>
+                    <li>В production уже 60+ сервисов</li>
+                    <li>Eсть проблема с производительностью в 3.1 <br>
+                        (Должна быть исправлена в 3.1.2)</li>
+                </ul>
+            </section>
+
+            <section>
                 <h3>gRPC</h3>
                 <ul>
                     <li>Переход на gRPC от Microsoft</li>
@@ -168,6 +177,24 @@
             </section>
 
             <section>
+                <h3>Пример gRPC клиента</h3>
+                <pre><code data-trim class="hljs cs">
+                    public class Startup
+                    {
+                        public void ConfigureServices(IServiceCollection services)
+                        {
+                            services.AddGrpcClient&lt;Greeter.GreeterClient&gt;(options =>
+                            {
+                                options.Address = new Uri("...");
+                            });
+                        }
+
+                        // ...
+                    }
+                </code></pre>
+            </section>
+
+            <section>
                 <h3>Конфигурация Kestrel</h3>
                 <pre><code data-trim class="hljs cs">
                     var host = Host.CreateDefaultBuilder(args)
@@ -189,24 +216,6 @@
             </section>
 
             <section>
-                <h3>Пример gRPC клиента</h3>
-                <pre><code data-trim class="hljs cs">
-                    public class Startup
-                    {
-                        public void ConfigureServices(IServiceCollection services)
-                        {
-                            services.AddGrpcClient&lt;Greeter.GreeterClient&gt;(options =>
-                            {
-                                options.Address = new Uri("...");
-                            });
-                        }
-
-                        // ...
-                    }
-                </code></pre>
-            </section>
-
-            <section>
                 <h3>Http2UnencryptedSupport</h3>
                 <pre><code data-trim class="hljs cs">
                     AppContext.SetSwitch(
@@ -215,20 +224,15 @@
             </section>
 
             <section>
-                <h3>Изменения в метриках и трассировках</h3>
+                <h3>Обновление Prometheus.Client до 3.1+</h3>
                 <ul>
-                    <li>Обновили Prometheus.Client до 3.1+</li>
-                    <li>Переделали метрики для HTTP и GRPC <br>
-                        (форкнули OpenTracing.Contrib.NetCore)</li>
-                    <li>Диагностики для Npgsql так и не появились. <br>
-                        Нужно использовать Ozon.Diagnostics.Npgsql</li>
-                    <li>Диагностики для EntityFramework <br>
-                        больше не будут использоваться.</li>
+                    <li>Больше не поддерживается IOnDemandCollector</li>
+                    <li>Необходимо использовать ICollector</li>
                 </ul>
             </section>
 
             <section>
-                <h3>ICollector (вместо IOnDemandCollector)</h3>
+                <h3>Сбор метрик "по требованию"</h3>
                 <pre><code data-trim class="hljs cs">
                     internal sealed class AppMetricsCollector : ICollector
                     {
@@ -254,7 +258,7 @@
             </section>
 
             <section>
-                <h3>ICollector (вместо IOnDemandCollector)</h3>
+                <h3>Сбор метрик "по требованию"</h3>
                 <pre><code data-trim class="hljs cs">
                     internal sealed class AppMetricsCollector : ICollector
                     {
@@ -278,12 +282,36 @@
 
             <section>
                 <h3>Улучшения в названиях спанов и метрик</h3>
+                <ul>
+                    <li>Исправлены баги с отрицательным <br>
+                        количеством подключений</li>
+                    <li>Поддержка метрик:<br>
+                        ozon_mssql_connections_wait_duration_seconds<br>
+                        ozon_pgsql_connections_wait_duration_seconds</li>
+                    <li>Спаны со временем открытия подключения</li>
+                    <li>Переделали метрики для HTTP и GRPC <br>
+                        (форкнули OpenTracing.Contrib.NetCore)</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Улучшения в названиях спанов и метрик</h3>
                 <img src="img/traces_01.PNG" alt="" />
             </section>
 
             <section>
                 <h3>Улучшения в названиях спанов и метрик</h3>
                 <img src="img/traces_02.PNG" alt="" />
+            </section>
+
+            <section>
+                <h3>Метрики и трассироки для PostgreSQL</h3>
+                <ul>
+                    <li>Диагностики для Npgsql так и не появились. <br>
+                        Нужно использовать Ozon.Diagnostics.Npgsql</li>
+                    <li>Диагностики для EntityFramework <br>
+                        больше не будут использоваться.</li>
+                </ul>
             </section>
 
             <section>
@@ -359,13 +387,15 @@
             <section>
                 <h3>Ozon.Platform.Etcd</h3>
                 <ul>
+                    <li>Изменение настроек сервиса "на лету" <br>
+                        через <a href="https://che.o3.ru/">https://che.o3.ru/</a></li>
                     <li>Обновление EtcdClient</li>
                     <li>Поддержка балансировки</li>
                 </ul>
             </section>
 
             <section>
-                <h3>Ozon.Platform.Etcd</h3>
+                <h3>Подключение Ozon.Platform.Etcd</h3>
                 <pre><code data-trim class="hljs cs">
                     var host = Host.CreateDefaultBuilder(args)
                         .ConfigureWebHostDefaults(webBuilder =>
@@ -379,18 +409,20 @@
             </section>
 
             <section>
+                <h3>Редактирование настроек в che.o3.ru</h3>
+                <img src="img/etcd.png" alt="" />
+            </section>
+
+            <section>
                 <h3>Ozon.Platform.Vault</h3>
                 <ul>
+                    <li>Хранение секретов приложений: <br>
+                        пароли, сертификаты, и т.п.</li>
                     <li>Несколько реализаций, <br>
                         у нас используется последняя</li>
                     <li>Указать в vaules.yaml: <br>
                         <code>vaultScheme: "2"</code></li>
-                    <li>LDAP для локальной разработки:</li>
                 </ul>
-
-                <pre><code data-trim class="hljs bash">
-                    vault login -address=https://vault.s.o3.ru:8200 -method=ldap -username=%username%
-                </code></pre>
             </section>
 
             <section>
@@ -404,6 +436,18 @@
                                 .UsePlatformVault(project: "dotnet/sandbox/vault");
                         })
                         .Build();
+                </code></pre>
+            </section>
+
+            <section>
+                <h3>Редактирование настроек в vault.s.o3.ru</h3>
+                <img src="img/vault.png" alt="" />
+            </section>
+
+            <section>
+                <h3>Поддержка локальной разработки</h3>
+                <pre><code data-trim class="hljs bash">
+                    vault login -address=https://vault.s.o3.ru:8200 -method=ldap -username=%username%
                 </code></pre>
             </section>
 
@@ -526,6 +570,15 @@
 
             <section>
                 <h3>Изменения в .gitlab-ci.yml</h3>
+                <ul>
+                    <li>Минимизация .gitlab-ci.yml</li>
+                    <li>Обязательное указание сервиса и неймспейса</li>
+                    <li>Генерация migration скрипта</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Изменения в .gitlab-ci.yml</h3>
                 <pre><code data-trim class="hljs yaml">
                     include:
                       - project: 'dotnet/ci/application'
@@ -537,15 +590,6 @@
                       APP_NAMESPACE: 'exch'
                       APP_VERSION: '0.1'
                 </code></pre>
-            </section>
-
-            <section>
-                <h3>Изменения в .gitlab-ci.yml</h3>
-                <ul>
-                    <li>Минимизация .gitlab-ci.yml</li>
-                    <li>Обязательное указание сервиса и неймспейса</li>
-                    <li>Генерация migration скрипта</li>
-                </ul>
             </section>
 
             <section>
